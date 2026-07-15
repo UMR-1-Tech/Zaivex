@@ -1916,8 +1916,9 @@
         }
 
         // Contact Form
-        function handleContactSubmit(e) {
+        async function handleContactSubmit(e) {
             e.preventDefault();
+            const form = e.target;
             const submitText = document.getElementById('submit-text');
             const submitIcon = document.getElementById('submit-icon');
             const submitSpinner = document.getElementById('submit-spinner');
@@ -1926,13 +1927,36 @@
             submitIcon.classList.add('hidden');
             submitSpinner.classList.remove('hidden');
 
-            setTimeout(() => {
+            const payload = {
+                name: form.name.value,
+                email: form.email.value,
+                company: form.company.value,
+                service: form.service.value,
+                message: form.message.value,
+                subscribe: form.newsletter.checked
+            };
+
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.error || 'Failed to send message.');
+                }
+
+                form.reset();
+                showToast('Message Sent', 'Thank you! We will get back to you within 24 hours.');
+            } catch (err) {
+                showToast('Something Went Wrong', err.message || 'Please try again or email us directly.');
+            } finally {
                 submitText.textContent = 'Send Message';
                 submitIcon.classList.remove('hidden');
                 submitSpinner.classList.add('hidden');
-                e.target.reset();
-                showToast('Message Sent', 'Thank you! We will get back to you within 24 hours.');
-            }, 2000);
+            }
         }
 
         // Toast Notification
